@@ -5,7 +5,7 @@ import { ethers } from "ethers";
 import myEpicNft from "./utils/MyEpicNFT.json";
 
 // Constants
-const TWITTER_HANDLE = "_buildspace";
+const TWITTER_HANDLE = "ximahmed";
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 const TOTAL_MINT_COUNT = 50;
 const CONTRACT_ADDRESS = "0xc461734DA02F329128c042Fc32E79A1F54945552";
@@ -97,10 +97,14 @@ function App() {
           signer as any
         );
 
-        const totalNumberOfNftsMintedSoFar = await connectedContract.getTotalNFTsMintedSoFar();
+        const totalNumberOfNftsMintedSoFar =
+          await connectedContract.getTotalNFTsMintedSoFar();
 
         setCount(totalNumberOfNftsMintedSoFar.toNumber());
-        console.log("total number of NFTs", totalNumberOfNftsMintedSoFar.toNumber());
+        console.log(
+          "total number of NFTs",
+          totalNumberOfNftsMintedSoFar.toNumber()
+        );
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -130,9 +134,11 @@ function App() {
         // If you're familiar with webhooks, it's very similar to that!
         connectedContract.on("NewEpicNFTMinted", (from, tokenId, totalNfts) => {
           console.log(from, tokenId.toNumber(), totalNfts.toNumber());
+          const openSeaLink = `https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`;
+          setLink(openSeaLink);
           setCount(totalNfts.toNumber());
           alert(
-            `Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take a max of 10 min to show up on OpenSea. Here's the link: https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`
+            `Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take a max of 10 min to show up on OpenSea. Here's the link: ${openSeaLink}`
           );
         });
 
@@ -149,6 +155,7 @@ function App() {
    * This runs our function when the page loads.
    */
   useEffect(() => {
+    checkNetwork();
     checkIfWalletIsConnected();
   }, []);
 
@@ -175,9 +182,6 @@ function App() {
         console.log(
           `Mined, see transaction: https://rinkeby.etherscan.io/tx/${nftTxn.hash}`
         );
-        setLink(
-          `https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${nftTxn.hash}`
-        );
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -185,6 +189,31 @@ function App() {
       console.log(error);
     } finally {
       setIsLoading(false);
+    }
+  };
+  const checkNetwork = async () => {
+    try {
+      const { ethereum } = window as any;
+
+      if (!ethereum) {
+        alert("Get MetaMask!");
+        return;
+      }
+
+      /*
+       * Fancy method to request access to account.
+       */
+      const chainId = await ethereum.request({
+        method: "eth_chainId",
+      });
+
+      // String, hex code of the chainId of the Rinkebey test network
+      const rinkebyChainId = "0x4";
+      if (chainId !== rinkebyChainId) {
+        alert("You are not connected to the Rinkeby Test Network!");
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -213,10 +242,17 @@ function App() {
               {isLoading ? "Minting..." : "Mint NFT"}
             </button>
           ) : (
-            <a href={link} style={{ color: "white" }}>
+            <a href={link} style={{ color: "white" }} target="_blank">
               {link}
             </a>
           )}
+          <a
+            target="_blank"
+            className="opensea-link"
+            href="https://testnets.opensea.io/collection/squarenft-entqdhdvwy"
+          >
+            🌊 View Collection on OpenSea
+          </a>
         </div>
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
